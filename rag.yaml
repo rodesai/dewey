@@ -1,0 +1,23 @@
+s3_bucket: opendata-rag
+s3_region: us-east-1
+s3_path: rag-index
+
+source_dirs:
+  - path: /Users/rohan/responsive/opendata
+    include_patterns:
+      - "**/*.rs"
+      - "**/*.md"
+    exclude_patterns:
+      - "**/target/**"
+
+  # Add more repos here:
+  # - path: /Users/rohan/repos/slatedb
+  #   include_patterns:
+  #     - "**/*.rs"
+  #     - "**/*.md"
+  #   exclude_patterns:
+  #     - "**/target/**"
+
+voyage_model: voyage-code-3
+dimensions: 1024
+embed_batch_size: 128
