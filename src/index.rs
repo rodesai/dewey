@@ -11,6 +11,49 @@ use crate::chunk::{self, Chunk};
 use crate::config::{RagConfig, SourceDir};
 use crate::embed::VoyageClient;
 
+/// Chars-per-token estimate for code. Voyage's tokenizer averages ~3.5-4.5
+/// chars/token on code; 4 is a reasonable middle ground.
+const CHARS_PER_TOKEN: usize = 4;
+
+pub fn dry_run(config: &RagConfig) -> Result<()> {
+    let chunks = walk_and_chunk_all(&config.source_dirs)?;
+
+    let total_chars: usize = chunks.iter().map(|c| c.text.len()).sum();
+    let estimated_tokens = total_chars / CHARS_PER_TOKEN;
+    let num_batches = (chunks.len() + config.embed_batch_size - 1) / config.embed_batch_size;
+
+    // Per-source-dir breakdown
+    let mut by_dir: std::collections::BTreeMap<&str, (usize, usize)> =
+        std::collections::BTreeMap::new();
+    for chunk in &chunks {
+        let dir = chunk.file_path.split('/').next().unwrap_or("unknown");
+        let entry = by_dir.entry(dir).or_insert((0, 0));
+        entry.0 += 1;
+        entry.1 += chunk.text.len();
+    }
+
+    println!("Dry run summary");
+    println!("===============");
+    println!();
+    for (dir, (count, chars)) in &by_dir {
+        println!(
+            "  {:<30} {:>5} chunks  ~{:>8} tokens",
+            dir,
+            count,
+            chars / CHARS_PER_TOKEN
+        );
+    }
+    println!();
+    println!("  Total chunks:          {}", chunks.len());
+    println!("  Total characters:      {}", total_chars);
+    println!("  Estimated tokens:      ~{}", estimated_tokens);
+    println!("  Embedding batches:     {}", num_batches);
+    println!("  Model:                 {}", config.voyage_model);
+    println!("  Dimensions:            {}", config.dimensions);
+
+    Ok(())
+}
+
 pub async fn run(config: &RagConfig) -> Result<()> {
     let api_key = RagConfig::voyage_api_key()?;
     let client = VoyageClient::new(api_key, config.voyage_model.clone(), config.dimensions);

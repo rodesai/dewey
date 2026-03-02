@@ -22,6 +22,9 @@ enum Command {
         /// Path to config file
         #[arg(short, long, default_value = "rag.yaml")]
         config: String,
+        /// Dry run: chunk and estimate tokens without calling the embedding API
+        #[arg(long)]
+        dry_run: bool,
     },
     /// Search the indexed codebase
     Search {
@@ -45,9 +48,13 @@ async fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Command::Index { config } => {
+        Command::Index { config, dry_run } => {
             let cfg = config::RagConfig::load(&config)?;
-            index::run(&cfg).await?;
+            if dry_run {
+                index::dry_run(&cfg)?;
+            } else {
+                index::run(&cfg).await?;
+            }
         }
         Command::Search { config, query, k } => {
             let cfg = config::RagConfig::load(&config)?;
