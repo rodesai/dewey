@@ -1,6 +1,6 @@
 # RAG CLI
 
-Semantic code search over the OpenData codebase. Indexes Rust and markdown files into the vector database, then serves search queries. Designed for RAG integration with Claude Code.
+Semantic code search over a codebase. Indexes Rust and markdown files into the vector database, then serves search queries. Designed for RAG integration with Claude Code.
 
 ## Prerequisites
 
